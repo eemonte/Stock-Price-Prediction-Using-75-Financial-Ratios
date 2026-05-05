@@ -5,15 +5,12 @@ library(glmnet)
 
 rm(list = ls())
 
-setwd("C:/Users/gugao/OneDrive - Suncor Energy Inc/Documents/Data Science/GT Courses/MGT 6203/Project")
-
 # Prepare monthly financial ratios for all 30 Dow stocks from 2010 to 2022.
 Dow30_FinancialRatios <- read.csv(file = 'Dow30FinancialRatios.csv')
 
 Dow30_FinancialRatios <- Dow30_FinancialRatios[,5:77] # Keep only Ticker, Date and financial ratios 
 
 Dow30_FinancialRatios <- transform(Dow30_FinancialRatios, public_date = as.Date(as.character(public_date), "%Y%m%d"))
-
 
 # Prepare stock price history for all 30 Dow stocks from 2010 to 2022
 stock_prices  <- tq_get(c("AAPL","AMGN", "AXP","BA","C","CAT","CRM","CSCO","CVX","DIS",
@@ -49,9 +46,8 @@ merged_close_ratios_na_removed_imputed <- merged_close_ratios_na_removed %>%
   group_by(TICKER) %>% 
   fill(names(merged_close_ratios_na_removed), .direction = "downup")
 
-# Checking NA value again
-# Finding JPM is missing values for the entire duration for intcov, intcov_ratio, int_debt, int_totdebt 
-# while TRV is missing values for the entire duration for lt_ppent.
+# JPM is missing values for the entire duration for intcov, intcov_ratio, int_debt, int_totdebt 
+# TRV is missing values for the entire duration for lt_ppent
 # As a result, these 5 financial ratios above are removed. 
 
 sum(is.na(merged_close_ratios_na_removed_imputed))
@@ -59,11 +55,9 @@ t <- merged_close_ratios_na_removed_imputed %>% summarise(across(everything(), ~
 
 df_clean <- subset(merged_close_ratios_na_removed_imputed, select=-c(lt_ppent,intcov,intcov_ratio,int_debt, int_totdebt))
 
-
 df_clean[order(-df_clean$public_date),]
 
-
-# Below is a test example to use Lasso Regression to remove features in the clean dataset for AAPL stock, 
+# Below is a test example to use Lasso Regression to remove features in the clean dataset for AAPL stock
 AAPL <- df_clean[df_clean$TICKER == 'AAPL',]
 
 y_AAPL <- AAPL$close
@@ -86,10 +80,7 @@ sse <- sum((y_predicted - y_AAPL)^2)
 rsq <- 1 - sse/sst
 rsq
 
-
-# Below is a test example to use Lasso Regression to remove features in the clean dataset for all stocks, 
-
-
+# Below is a test example to use Lasso Regression to remove features in the clean dataset for all stocks
 y <- df_clean$close
 x <- data.matrix(df_clean[,3:54])
 
