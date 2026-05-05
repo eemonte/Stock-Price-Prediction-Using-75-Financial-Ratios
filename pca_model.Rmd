@@ -1,9 +1,3 @@
----
-title: "MGT6203-project-PCA"
-output: pdf_document
-date: "2023-03-26"
----
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
