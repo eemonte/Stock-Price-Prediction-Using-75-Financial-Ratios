@@ -69,7 +69,6 @@ ggplot(clean_na_df, aes(x = status, y = pct_missing, fill = status)) +
   theme_minimal()
 
 
-
 #### 2. Evaluate the effectiveness of the imputation method and identify any outliers or unusual patterns in the imputed values.
 
 # Imputing remaining financial ratios with NA values. 
