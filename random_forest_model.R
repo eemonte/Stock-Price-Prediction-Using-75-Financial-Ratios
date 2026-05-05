@@ -1,5 +1,4 @@
-# install.packages("glmnet")
-
+install.packages("glmnet")
 library(tidyquant)
 library(dplyr)
 library(tidyr)
@@ -13,7 +12,6 @@ Dow30_FinancialRatios <- read.csv(file = 'Dow30FinancialRatios.csv')
 Dow30_FinancialRatios <- Dow30_FinancialRatios[,5:77] # Keep only Ticker, Date and financial ratios 
 
 Dow30_FinancialRatios <- transform(Dow30_FinancialRatios, public_date = as.Date(as.character(public_date), "%Y%m%d"))
-
 
 # Prepare stock price history for all 30 Dow stocks from 2010 to 2022
 stock_prices  <- tq_get(c("AAPL","AMGN", "AXP","BA","C","CAT","CRM","CSCO","CVX","DIS",
@@ -39,9 +37,7 @@ merged_close_na_removed %>% summarise(across(everything(), ~ sum(is.na(.))))
 
 # Removing financial ratios with >500 NAs, which translates to about ~15% of each financial ratio's 3255 total observations. 
 # Removing these financial ratios is deemed to be more beneficial than imputing them. 
-
 merged_close_ratios_na_removed <- subset(merged_close_na_removed, select=-c(pretret_noa,pretret_earnat,invt_act,rect_act,curr_debt,profit_lct,ocf_lct,cash_ratio,quick_ratio,curr_ratio,cash_conversion,inv_turn,sale_nwc,PEG_trailing))
-
 merged_close_ratios_na_removed %>% summarise(across(everything(), ~ sum(is.na(.))))
 
 # Imputing remaining financial ratios with NA values. 
@@ -50,33 +46,15 @@ merged_close_ratios_na_removed_imputed <- merged_close_ratios_na_removed %>%
   fill(names(merged_close_ratios_na_removed), .direction = "downup")
 
 # Checking NA value again
-# Finding JPM is missing values for the entire duration for intcov, intcov_ratio, int_debt, int_totdebt 
-# while TRV is missing values for the entire duration for lt_ppent.
+# JPM is missing values for the entire duration for intcov, intcov_ratio, int_debt, int_totdebt 
+# TRV is missing values for the entire duration for lt_ppent.
 # As a result, these 5 financial ratios above are removed. 
-
 sum(is.na(merged_close_ratios_na_removed_imputed))
 t <- merged_close_ratios_na_removed_imputed %>% summarise(across(everything(), ~ sum(is.na(.))))
 
 df_clean <- subset(merged_close_ratios_na_removed_imputed, select=-c(lt_ppent,intcov,intcov_ratio,int_debt, int_totdebt))
 
-
-
-# Below is a test example to use Lasso Regression to remove features in the clean dataset for AAPL stock, 
-AAPL <- df_clean[df_clean$TICKER == 'AAPL',]
-
-y_AAPL <- AAPL$close
-x_AAPL <- data.matrix(AAPL[,3:54])
-
-cv_model <- cv.glmnet(x_AAPL, y_AAPL, alpha = 1)
-best_lambda <- cv_model$lambda.min
-plot(cv_model)
-
-best_model <- glmnet(x_AAPL, y_AAPL, alpha = 1, lambda = best_lambda)
-coef(best_model)
-
-
 # Random forest model
-
 # Splitting the dataset into the Training set and Test set
 # install.packages('caTools')
 library(caTools)
@@ -89,7 +67,6 @@ max_close = max(dataset$close)
 min_close = min(dataset$close)
 
 dataset$close = (dataset$close - min_close) / (max(dataset$close) - min_close)
-
 
 split = sample.split(dataset$close, SplitRatio = 2/3)
 training_set = subset(dataset, split == TRUE)
@@ -128,6 +105,7 @@ importance(rf_model)
 #install.packages("caret")
 library(caret)
 varImp(rf_model)
+
 # Get variable importance measures
 importance_matrix <- importance(rf_model, type = 2)
 
@@ -160,14 +138,12 @@ barplot(top_10_importance,
         xlim = c(0, max(top_10_importance) * 1.1),
         xpd = TRUE)
 
-
 # Create scatter plot of predicted vs. actual values
 plot(rf_preds, test_set$close,
      main = "Prediction vs. Actual Plot",
      xlab = "Predicted Values",
      ylab = "Actual Values")
 abline(a = 0, b = 1, col = "red")
-
 
 # re-run random forest model with top 5 key variables
 dataset = df_clean[, c(1, 3:51, 58)]
